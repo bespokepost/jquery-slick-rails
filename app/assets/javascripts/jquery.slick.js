@@ -188,6 +188,55 @@
 
   }());
 
+  Slick.prototype.fOuterWidth = function($element, includeMargin) {
+    if(!$element[0]) { return null; }
+
+    // The returned value of getBoundingClientRect is a DOMRect object which is the smallest
+    // rectangle which contains the entire element, including its padding and border-width.
+    var outerWidth = $element[0].getBoundingClientRect().width;
+
+    if(includeMargin) {
+      var margin = parseFloat($element.css('margin-left') || 0) + parseFloat($element.css('margin-right') || 0);
+      return outerWidth + margin;
+    } else {
+      return outerWidth;
+    }
+  };
+
+  Slick.prototype.fOuterHeight = function($element, includeMargin) {
+    if(!$element[0]) { return null; }
+
+    var outerHeight = $element[0].getBoundingClientRect().height;
+
+    if(includeMargin) {
+      var margin = parseFloat($element.css('margin-top') || 0) + parseFloat($element.css('margin-bottom')  || 0);
+      return outerHeight + margin;
+    } else {
+      return outerHeight;
+    }
+  };
+
+  // The goal of this function is to recreate $.width but without rounding.
+  // Keep in mind that $.width will always return the content width, regardless
+  // of the value of the CSS box-sizing property.
+  Slick.prototype.fWidth = function($element) {
+    if(!$element[0]) { return null; }
+
+    var width = $element[0].getBoundingClientRect().width;
+    var padding = parseFloat($element.css('padding-left') || 0) + parseFloat($element.css('padding-right') || 0);
+    var borderWidth = parseFloat($element.css('border-width') || 0);
+    return width - padding - borderWidth;
+  };
+
+  Slick.prototype.fHeight = function($element) {
+    if(!$element[0]) { return null; }
+
+    var height = $element[0].getBoundingClientRect().height;
+    var padding = parseFloat($element.css('padding-top') || 0) + parseFloat($element.css('padding-bottom') || 0);
+    var borderWidth = parseFloat($element.css('border-width') || 0);
+    return height - padding - borderWidth;
+  };
+
   Slick.prototype.activateADA = function() {
     var _ = this;
 
@@ -289,7 +338,8 @@
           duration: _.options.speed,
           easing: _.options.easing,
           step: function(now) {
-            now = Math.ceil(now);
+            now = Math.floor(now);
+
             if (_.options.vertical === false) {
               animProps[_.animType] = 'translate(' +
                   now + 'px, 0px)';
@@ -308,9 +358,9 @@
         });
 
       } else {
-
         _.applyTransition();
-        targetLeft = Math.ceil(targetLeft);
+
+        targetLeft = Math.floor(targetLeft);
 
         if (_.options.vertical === false) {
           animProps[_.animType] = 'translate3d(' + targetLeft + 'px, 0px, 0px)';
@@ -1075,7 +1125,6 @@
   };
 
   Slick.prototype.getLeft = function(slideIndex) {
-
     var _ = this,
         targetLeft,
         verticalHeight,
@@ -1083,8 +1132,10 @@
         targetSlide,
         coef;
 
+    var $firstSlide = _.$slides.first();
+
     _.slideOffset = 0;
-    verticalHeight = _.$slides.first().outerHeight(true);
+    verticalHeight = _.fOuterHeight($firstSlide, true);
 
     if (_.options.infinite === true) {
       if (_.slideCount > _.options.slidesToShow) {
@@ -1139,7 +1190,6 @@
     }
 
     if (_.options.variableWidth === true) {
-
       if (_.slideCount <= _.options.slidesToShow || _.options.infinite === false) {
         targetSlide = _.$slideTrack.children('.slick-slide').eq(slideIndex);
       } else {
@@ -1148,7 +1198,7 @@
 
       if (_.options.rtl === true) {
         if (targetSlide[0]) {
-          targetLeft = (_.$slideTrack.width() - targetSlide[0].offsetLeft - targetSlide.width()) * -1;
+          targetLeft = (_.fWidth(_.$slideTrack) - targetSlide[0].offsetLeft - _.fWidth(targetSlide)) * -1;
         } else {
           targetLeft =  0;
         }
@@ -1165,7 +1215,7 @@
 
         if (_.options.rtl === true) {
           if (targetSlide[0]) {
-            targetLeft = (_.$slideTrack.width() - targetSlide[0].offsetLeft - targetSlide.width()) * -1;
+            targetLeft = (_.fWidth(_.$slideTrack) - targetSlide[0].offsetLeft - _.fWidth(targetSlide)) * -1;
           } else {
             targetLeft =  0;
           }
@@ -1173,12 +1223,11 @@
           targetLeft = targetSlide[0] ? targetSlide[0].offsetLeft * -1 : 0;
         }
 
-        targetLeft += (_.$list.width() - targetSlide.outerWidth()) / 2;
+        targetLeft += (_.fWidth(_.$list) - _.fOuterWidth(targetSlide)) / 2;
       }
     }
 
     return targetLeft;
-
   };
 
   Slick.prototype.getOption = Slick.prototype.slickGetOption = function(option) {
@@ -1992,7 +2041,6 @@
   };
 
   Slick.prototype.setCSS = function(position) {
-
     var _ = this,
         positionProps = {},
         x, y;
@@ -2000,8 +2048,8 @@
     if (_.options.rtl === true) {
       position = -position;
     }
-    x = _.positionProp == 'left' ? Math.ceil(position) + 'px' : '0px';
-    y = _.positionProp == 'top' ? Math.ceil(position) + 'px' : '0px';
+    x = _.positionProp == 'left' ? Math.floor(position) + 'px' : '0px';
+    y = _.positionProp == 'top' ?  Math.floor(position) + 'px' : '0px';
 
     positionProps[_.positionProp] = position;
 
@@ -2017,21 +2065,20 @@
         _.$slideTrack.css(positionProps);
       }
     }
-
   };
 
   Slick.prototype.setDimensions = function() {
-
     var _ = this;
+    var $firstSlide = _.$slides.first();
+    var MAGIC_CONSTANT = 5000;
 
     if (_.options.vertical === false) {
       if (_.options.centerMode === true) {
-        _.$list.css({
-          padding: ('0px ' + _.options.centerPadding)
-        });
+        _.$list.css({ padding: ('0px ' + _.options.centerPadding) });
       }
     } else {
-      _.$list.height(_.$slides.first().outerHeight(true) * _.options.slidesToShow);
+      _.$list.height(_.fOuterHeight($firstSlide, true) * _.options.slidesToShow);
+
       if (_.options.centerMode === true) {
         _.$list.css({
           padding: (_.options.centerPadding + ' 0px')
@@ -2039,24 +2086,24 @@
       }
     }
 
-    _.listWidth = _.$list.width();
-    _.listHeight = _.$list.height();
-
+    _.listWidth = _.fWidth(_.$list);
+    _.listHeight = _.fHeight(_.$list);
 
     if (_.options.vertical === false && _.options.variableWidth === false) {
-      _.slideWidth = Math.ceil(_.listWidth / _.options.slidesToShow);
-      _.$slideTrack.width(Math.ceil((_.slideWidth * _.$slideTrack.children('.slick-slide').length)));
-
+      _.slideWidth = _.listWidth / _.options.slidesToShow;
+      _.$slideTrack.width(_.slideWidth * _.$slideTrack.children('.slick-slide').length);
     } else if (_.options.variableWidth === true) {
-      _.$slideTrack.width(5000 * _.slideCount);
+      _.$slideTrack.width(MAGIC_CONSTANT * _.slideCount);
     } else {
-      _.slideWidth = Math.ceil(_.listWidth);
-      _.$slideTrack.height(Math.ceil((_.$slides.first().outerHeight(true) * _.$slideTrack.children('.slick-slide').length)));
+      _.slideWidth = _.listWidth;
+      var slideTrackHeight = _.fOuterHeight($firstSlide, true) * _.$slideTrack.children('.slick-slide').length;
+      _.$slideTrack.height(slideTrackHeight);
     }
 
-    var offset = _.$slides.first().outerWidth(true) - _.$slides.first().width();
-    if (_.options.variableWidth === false) _.$slideTrack.children('.slick-slide').width(_.slideWidth - offset);
-
+    if (_.options.variableWidth === false) {
+      var offset = _.fOuterWidth($firstSlide, true) - _.fWidth($firstSlide);
+      _.$slideTrack.children('.slick-slide').width(_.slideWidth - offset);
+    }
   };
 
   Slick.prototype.setFade = function() {
@@ -3003,5 +3050,4 @@
     }
     return _;
   };
-
 }));
