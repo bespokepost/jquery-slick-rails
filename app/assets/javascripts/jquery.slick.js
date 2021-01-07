@@ -2068,9 +2068,9 @@
   };
 
   Slick.prototype.setDimensions = function() {
-    var _ = this;
-    var $firstSlide = _.$slides.first();
-    var MAGIC_CONSTANT = 5000;
+    var _ = this,
+        $firstSlide = _.$slides.first(),
+        MAGIC_CONSTANT = 5000;
 
     if (_.options.vertical === false) {
       if (_.options.centerMode === true) {
