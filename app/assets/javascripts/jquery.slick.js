@@ -2040,6 +2040,20 @@
 
   };
 
+  Slick.prototype.replaceSlides = function(newSlides) {
+    var _ = this;
+
+    _.unload();
+
+    _.$slideTrack.children(_.options.slide).detach();
+    _.$slideTrack.append(newSlides);
+    _.$slidesCache = _.$slides = _.$slideTrack.children(_.options.slide).each(function(index, element) {
+      $(element).attr('data-slick-index', index);
+    });
+
+    _.reinit();
+  };
+
   Slick.prototype.setCSS = function(position) {
     var _ = this,
         positionProps = {},
