@@ -897,7 +897,7 @@
 
     _.autoPlayClear();
 
-    _.touchObject = {};
+    _.touchObject = _.initials.touchObject = {};
 
     _.cleanUpEvents();
 
@@ -2051,7 +2051,7 @@
       $(element).attr('data-slick-index', index);
     });
 
-    _.reinit();
+    _.refresh(false);
   };
 
   Slick.prototype.setCSS = function(position) {
@@ -2764,7 +2764,7 @@
       if( direction != 'vertical' ) {
 
         _.slideHandler( slideCount );
-        _.touchObject = {};
+        _.touchObject = _.initials.touchObject = {};
         _.$slider.trigger('swipe', [_, direction ]);
 
       }
@@ -2774,7 +2774,7 @@
       if ( _.touchObject.startX !== _.touchObject.curX ) {
 
         _.slideHandler( _.currentSlide );
-        _.touchObject = {};
+        _.touchObject = _.initials.touchObject = {};
 
       }
 
@@ -2907,7 +2907,7 @@
     _.interrupted = true;
 
     if (_.touchObject.fingerCount !== 1 || _.slideCount <= _.options.slidesToShow) {
-      _.touchObject = {};
+      _.touchObject = _.initials.touchObject = {};
       return false;
     }
 
