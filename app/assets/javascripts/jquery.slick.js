@@ -1881,21 +1881,19 @@
   };
 
   Slick.prototype.refresh = function( initializing ) {
-
     var _ = this, currentSlide, lastVisibleIndex;
 
     lastVisibleIndex = _.slideCount - _.options.slidesToShow;
 
     // in non-infinite sliders, we don't want to go past the
     // last visible index.
-    if( !_.options.infinite && ( _.currentSlide > lastVisibleIndex )) {
+    if(!_.options.infinite && ( _.currentSlide > lastVisibleIndex)) {
       _.currentSlide = lastVisibleIndex;
     }
 
     // if less slides than to show, go to start.
-    if ( _.slideCount <= _.options.slidesToShow ) {
+    if (_.slideCount <= _.options.slidesToShow) {
       _.currentSlide = 0;
-
     }
 
     currentSlide = _.currentSlide;
@@ -1906,17 +1904,16 @@
 
     _.init();
 
-    if( !initializing ) {
-
+    if(!initializing) {
       _.changeSlide({
         data: {
           message: 'index',
           index: currentSlide
         }
       }, false);
-
     }
 
+    _.$slider.trigger('refresh', [_, initializing]);
   };
 
   Slick.prototype.registerBreakpoints = function() {
@@ -1960,7 +1957,6 @@
   };
 
   Slick.prototype.reinit = function() {
-
     var _ = this;
 
     _.$slides =
@@ -2006,7 +2002,6 @@
     _.autoPlay();
 
     _.$slider.trigger('reInit', [_]);
-
   };
 
   Slick.prototype.resize = function() {
