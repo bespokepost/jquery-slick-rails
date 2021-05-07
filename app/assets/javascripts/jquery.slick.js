@@ -553,30 +553,55 @@
   };
 
   Slick.prototype.buildOut = function() {
-
     var _ = this;
 
-    _.$slides =
-        _.$slider
-            .children( _.options.slide + ':not(.slick-cloned)')
-            .addClass('slick-slide');
+    // NOTE: On "grid mode" (rows > 0) slick will bundle the slides on groups of size
+    //  _.options.slidesPerRow and wrap them with an extra div.
+    //
+    // Example: options = { rows = 2, slidesPerRow = 3, slide="slide" }, count: 10
+    //
+    // div
+    //   div <- row
+    //     div.slide
+    //     div.slide
+    //     div.slide
+    //   div <- row
+    //     div.slide
+    //     div.slide
+    //     div.slide
+    // div
+    //   div <- row
+    //     div.slide
+    //     div.slide
+    //     div.slide
+    //   div <- row
+    //     div.slide
+    //
+    // On the next line of this function slick will attempt to retrieve the slides using
+    //  a css selector which includes _.options.slide class. That class IS added to the
+    //  individual slides but NOT to the new wrapper divs that contain the slides.
+    //  The selector will yield no results and an empty slider will be rendered whenever
+    //  a non empty value is given on the slide option.
+    //
+    // The "fix" I implemented is to just omit _.options.slide on the selector during grid mode.
+    var slideClass = _.options.rows == 0 ? _.options.slide : '';
 
+    _.$slides = _.$slider.children(slideClass + ':not(.slick-cloned)').addClass('slick-slide');
     _.slideCount = _.$slides.length;
 
     _.$slides.each(function(index, element) {
       $(element)
-          .attr('data-slick-index', index)
-          .data('originalStyling', $(element).attr('style') || '');
+        .attr('data-slick-index', index)
+        .data('originalStyling', $(element).attr('style') || '');
     });
 
     _.$slider.addClass('slick-slider');
 
     _.$slideTrack = (_.slideCount === 0) ?
-        $('<div class="slick-track"/>').appendTo(_.$slider) :
-        _.$slides.wrapAll('<div class="slick-track"/>').parent();
+      $('<div class="slick-track"/>').appendTo(_.$slider) :
+      _.$slides.wrapAll('<div class="slick-track"/>').parent();
 
-    _.$list = _.$slideTrack.wrap(
-        '<div class="slick-list"/>').parent();
+    _.$list = _.$slideTrack.wrap('<div class="slick-list"/>').parent();
     _.$slideTrack.css('opacity', 0);
 
     if (_.options.centerMode === true || _.options.swipeToSlide === true) {
@@ -586,60 +611,53 @@
     $('img[data-lazy]', _.$slider).not('[src]').addClass('slick-loading');
 
     _.setupInfinite();
-
     _.buildArrows();
-
     _.buildDots();
-
     _.updateDots();
-
 
     _.setSlideClasses(typeof _.currentSlide === 'number' ? _.currentSlide : 0);
 
-    if (_.options.draggable === true) {
+    if (_.options.draggable === true)
       _.$list.addClass('draggable');
-    }
-
   };
 
   Slick.prototype.buildRows = function() {
-
     var _ = this, a, b, c, newSlides, numOfSlides, originalSlides,slidesPerSection;
 
     newSlides = document.createDocumentFragment();
     originalSlides = _.$slider.children();
 
     if(_.options.rows > 0) {
-
       slidesPerSection = _.options.slidesPerRow * _.options.rows;
-      numOfSlides = Math.ceil(
-          originalSlides.length / slidesPerSection
-      );
+      numOfSlides = Math.ceil(originalSlides.length / slidesPerSection);
 
       for(a = 0; a < numOfSlides; a++){
         var slide = document.createElement('div');
+
         for(b = 0; b < _.options.rows; b++) {
           var row = document.createElement('div');
+
           for(c = 0; c < _.options.slidesPerRow; c++) {
             var target = (a * slidesPerSection + ((b * _.options.slidesPerRow) + c));
+
             if (originalSlides.get(target)) {
               row.appendChild(originalSlides.get(target));
             }
           }
+
           slide.appendChild(row);
         }
+
         newSlides.appendChild(slide);
       }
 
       _.$slider.empty().append(newSlides);
       _.$slider.children().children().children()
-          .css({
-            'width':(100 / _.options.slidesPerRow) + '%',
-            'display': 'inline-block'
-          });
-
+        .css({
+          'width':(100 / _.options.slidesPerRow) + '%',
+          'display': 'inline-block'
+        });
     }
-
   };
 
   Slick.prototype.checkResponsive = function(initial, forceUpdate) {
