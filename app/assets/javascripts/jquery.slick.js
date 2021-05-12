@@ -617,8 +617,9 @@
 
     _.setSlideClasses(typeof _.currentSlide === 'number' ? _.currentSlide : 0);
 
-    if (_.options.draggable === true)
+    if (_.options.draggable === true) {
       _.$list.addClass('draggable');
+    }
   };
 
   Slick.prototype.buildRows = function() {
